@@ -8,14 +8,22 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    private function cartKey(): string
+    private static function cartKey(): string
     {
         return 'cart_' . (auth()->check() ? auth()->id() : 'guest');
     }
 
     public function __invoke(Request $request)
     {
-        $cart = session($this->cartKey(), []);
+        return view('cart.index', self::summary());
+    }
+
+    /**
+     * Cart lines with current prices, used by the cart page and the header mini-cart.
+     */
+    public static function summary(): array
+    {
+        $cart = session(self::cartKey(), []);
         $items = [];
         $subtotal = 0;
 
@@ -35,14 +43,16 @@ class CartController extends Controller
                 'quantity' => $item['quantity'],
                 'price' => $price,
                 'total' => $lineTotal,
-                'image' => $product->cover_image,
+                'image' => $product->cover_url,
                 'title' => $product->title,
                 'slug' => $product->slug,
                 'in_stock' => ($variant?->stock_quantity ?? $product->stock_quantity) >= $item['quantity'],
             ];
         }
 
-        return view('cart.index', compact('items', 'subtotal'));
+        $count = array_sum(array_column($items, 'quantity'));
+
+        return compact('items', 'subtotal', 'count');
     }
 
     public function add(Request $request)
@@ -64,7 +74,7 @@ class CartController extends Controller
             return back()->with('error', 'Not enough stock available.');
         }
 
-        $cart = session($this->cartKey(), []);
+        $cart = session(self::cartKey(), []);
         $rowId = $product->id . '-' . $variantId;
 
         if (isset($cart[$rowId])) {
@@ -78,7 +88,7 @@ class CartController extends Controller
             ];
         }
 
-        session([$this->cartKey() => $cart]);
+        session([self::cartKey() => $cart]);
         session(['cart_count' => array_sum(array_column($cart, 'quantity'))]);
 
         return back()->with('success', 'Added to cart.');
@@ -90,19 +100,19 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:0',
         ]);
 
-        $cart = session($this->cartKey(), []);
+        $cart = session(self::cartKey(), []);
 
         if (!isset($cart[$rowId])) {
             return back()->with('error', 'Item not found in cart.');
         }
 
-        if ($request->quantity === 0) {
+        if ((int) $request->quantity === 0) {
             unset($cart[$rowId]);
         } else {
             $cart[$rowId]['quantity'] = $request->quantity;
         }
 
-        session([$this->cartKey() => $cart]);
+        session([self::cartKey() => $cart]);
         session(['cart_count' => array_sum(array_column($cart, 'quantity'))]);
 
         return back()->with('success', 'Cart updated.');
@@ -110,9 +120,9 @@ class CartController extends Controller
 
     public function remove($rowId)
     {
-        $cart = session($this->cartKey(), []);
+        $cart = session(self::cartKey(), []);
         unset($cart[$rowId]);
-        session([$this->cartKey() => $cart]);
+        session([self::cartKey() => $cart]);
         session(['cart_count' => array_sum(array_column($cart, 'quantity'))]);
 
         return back()->with('success', 'Item removed from cart.');
@@ -120,7 +130,7 @@ class CartController extends Controller
 
     public function clear()
     {
-        session([$this->cartKey() => [], 'cart_count' => 0]);
+        session([self::cartKey() => [], 'cart_count' => 0]);
         return back()->with('success', 'Cart cleared.');
     }
 }

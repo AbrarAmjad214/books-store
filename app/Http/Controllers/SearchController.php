@@ -2,27 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\Author;
+use App\Models\Category;
+use App\Models\Publisher;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $query = Product::active()->inStock()->with(['category', 'author', 'publisher', 'defaultVariant']);
+        $products = ShopController::applyFilters(ShopController::baseQuery(), $request)
+            ->paginate(12)
+            ->withQueryString();
 
-        if ($request->filled('q')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->q . '%')
-                  ->orWhere('isbn', 'like', '%' . $request->q . '%')
-                  ->orWhere('sku', 'like', '%' . $request->q . '%')
-                  ->orWhereHas('author', fn ($a) => $a->where('name', 'like', '%' . $request->q . '%'))
-                  ->orWhereHas('publisher', fn ($p) => $p->where('name', 'like', '%' . $request->q . '%'));
-            });
-        }
+        $categories = Category::root()->active()->get();
+        $authors = Author::active()->get();
+        $publishers = Publisher::active()->get();
 
-        $products = $query->paginate(12)->withQueryString();
-
-        return view('shop.index', compact('products', 'request'));
+        return view('shop.index', compact('products', 'categories', 'authors', 'publishers', 'request'));
     }
 }

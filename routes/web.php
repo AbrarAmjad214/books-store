@@ -4,6 +4,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
@@ -12,23 +13,17 @@ use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================
-//  ALBAKIO INTERNATIONAL — PUBLIC WEBSITE PAGES
+//  STOREFRONT — PUBLIC WEBSITE PAGES
 // ============================================================
 
 // Homepage
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // About Us
-Route::get('/about-us', function () {
-    return view('about');
-})->name('about');
+Route::get('/about-us', fn() => view('pages.about'))->name('about');
 
 // Our Books / Catalogue
-Route::get('/our-books', function () {
-    return view('books');
-})->name('books');
+Route::get('/our-books', fn() => redirect()->route('shop'))->name('books');
 
 // Contact Us
 Route::get('/contact-us', [ContactController::class, 'show'])->name('contact');
@@ -38,78 +33,41 @@ Route::post('/contact-us', [ContactController::class, 'send'])->name('contact.se
 Route::get('/careers', [ContactController::class, 'careers'])->name('careers');
 Route::post('/careers/apply', [ContactController::class, 'applyCareer'])->name('careers.apply');
 
-// FAQs
-Route::get('/faq', function () {
-    return view('faq');
-})->name('faq');
+// Newsletter (footer form)
+Route::post('/newsletter', [ContactController::class, 'subscribe'])->name('newsletter.subscribe');
 
-// Legal & Policy pages
-Route::get('/privacy-policy', function () {
-    return view('privacy');
-})->name('privacy');
-
-Route::get('/terms-and-conditions', function () {
-    return view('terms');
-})->name('terms');
-
-Route::get('/shipping-returns-and-refunds', function () {
-    return view('shipping');
-})->name('shipping');
-
-Route::get('/complaints', function () {
-    return view('complaints');
-})->name('complaints');
-
-// Resources pages
-Route::get('/flash-cards', function () {
-    return view('simple-page', [
-        'title'    => 'Flash Cards',
-        'active'   => 'flash-cards',
-        'subtitle' => 'Printable flash cards to reinforce vocabulary, numbers, and concepts for early learners.',
-        'content'  => '<div style="text-align:center;padding:40px 0;"><div style="font-size:4rem;margin-bottom:20px;">🃏</div><p style="font-size:1rem;color:var(--text);margin-bottom:24px;">Our flash card resources for early learners are coming soon. Contact us to request printed copies for your school.</p><a href="' . route('contact') . '" class="btn btn-primary">Request Flash Cards</a></div>',
-    ]);
-})->name('flash-cards');
-
-Route::get('/teacher-guide', function () {
-    return view('simple-page', [
-        'title'    => 'Teacher Guide',
-        'active'   => 'teacher-guide',
-        'subtitle' => 'Comprehensive teacher guides for every book in our series with lesson plans, answer keys, and teaching tips.',
-        'content'  => '<div style="text-align:center;padding:40px 0;"><div style="font-size:4rem;margin-bottom:20px;">📖</div><p style="font-size:1rem;color:var(--text);margin-bottom:24px;">Teacher guides are available for all series. Contact us to request the guide for your specific book series.</p><a href="' . route('contact') . '" class="btn btn-primary">Request Teacher Guide</a></div>',
-    ]);
-})->name('teacher-guide');
-
-Route::get('/academic-calender', function () {
-    return view('simple-page', [
-        'title'    => 'Academic Calendar',
-        'active'   => 'academic-calendar',
-        'subtitle' => 'Stay organised with our comprehensive academic calendar designed for Pakistani school schedules.',
-        'content'  => '<div style="text-align:center;padding:40px 0;"><div style="font-size:4rem;margin-bottom:20px;">📅</div><p style="font-size:1rem;color:var(--text);margin-bottom:24px;">Download our academic calendar for the current school year.</p><a href="' . route('contact') . '" class="btn btn-primary">Download Calendar</a></div>',
-    ]);
-})->name('academic-calendar');
-
-Route::get('/summer-pack', function () {
-    return view('simple-page', [
-        'title'    => 'Summer Pack',
-        'active'   => 'summer-pack',
-        'subtitle' => 'Keep students engaged during the summer holidays with our specially designed summer activity packs.',
-        'content'  => '<div style="text-align:center;padding:40px 0;"><div style="font-size:4rem;margin-bottom:20px;">☀️</div><p style="font-size:1rem;color:var(--text);margin-bottom:24px;">Our Summer Pack 2025 is available for all classes. Fun, educational activities to keep learning going through the holidays.</p><a href="' . route('contact') . '" class="btn btn-primary">Order Summer Pack</a></div>',
-    ]);
-})->name('summer-pack');
-
-Route::get('/make-my-paper', function () {
-    return view('simple-page', [
-        'title'    => 'Make My Paper',
-        'active'   => 'make-my-paper',
-        'subtitle' => 'Create customised test papers and worksheets aligned to our book series.',
-        'content'  => '<div style="text-align:center;padding:40px 0;"><div style="font-size:4rem;margin-bottom:20px;">📝</div><p style="font-size:1rem;color:var(--text);margin-bottom:24px;">Our Make My Paper tool for creating custom assessment papers is coming soon. Contact us for more information.</p><a href="' . route('contact') . '" class="btn btn-primary">Get in Touch</a></div>',
-    ]);
-})->name('make-my-paper');
+// FAQ & policy pages
+Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+Route::get('/privacy-policy', [PageController::class, 'info'])->defaults('slug', 'privacy')->name('privacy');
+Route::get('/terms-and-conditions', [PageController::class, 'info'])->defaults('slug', 'terms')->name('terms');
+Route::get('/shipping-returns-and-refunds', [PageController::class, 'info'])->defaults('slug', 'shipping')->name('shipping');
+Route::get('/complaints', [PageController::class, 'info'])->defaults('slug', 'complaints')->name('complaints');
 
 // My Account (placeholder, links to auth)
 Route::get('/my-account', function () {
     return redirect()->route('login');
 })->name('account');
+
+// ============================================================
+//  EBUKZ HTML TEMPLATE PAGES (converted to Blade)
+// ============================================================
+
+Route::get('/home-1',           fn() => view('pages.home1'))->name('home1');
+Route::get('/home-2',           fn() => view('pages.home2'))->name('home2');
+Route::get('/home-3',           fn() => view('pages.home3'))->name('home3');
+Route::get('/shop-sidebar',     fn() => view('pages.shop-sidebar'))->name('shop.sidebar');
+Route::get('/shop-details',     fn() => view('pages.shop-details'))->name('shop.details');
+Route::get('/checkout',         fn() => view('pages.checkout'))->name('checkout');
+Route::get('/blog',             fn() => view('pages.blog'))->name('blog');
+Route::get('/blog-sidebar',     fn() => view('pages.blog-sidebar'))->name('blog.sidebar');
+Route::get('/blog-sidebar-2',   fn() => view('pages.blog-sidebar2'))->name('blog.sidebar2');
+Route::get('/blog-standard',    fn() => view('pages.blog-standard'))->name('blog.standard');
+Route::get('/blog-details',     fn() => view('pages.blog-details'))->name('blog.details');
+Route::get('/vendor',           fn() => view('pages.vendor'))->name('vendor');
+Route::get('/vendor-details',   fn() => view('pages.vendor-details'))->name('vendor.details');
+Route::get('/all-authors',      fn() => view('pages.author'))->name('author');
+Route::get('/author-details',   fn() => view('pages.author-details'))->name('author.details');
+Route::get('/404-error',        fn() => view('pages.error404'))->name('error404');
 
 // ============================================================
 //  EXISTING SHOP / PRODUCT ROUTES (preserved)
@@ -140,7 +98,7 @@ Route::prefix('wishlist')->name('wishlist.')->group(function () {
 // ============================================================
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('account');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

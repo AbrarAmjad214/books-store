@@ -10,7 +10,7 @@ class ProductController extends Controller
     {
         $product->load(['category', 'author', 'publisher', 'variants', 'reviews.user']);
 
-        $related = Product::active()->inStock()
+        $related = Product::active()->inStock()->with(['author', 'category'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->latest()

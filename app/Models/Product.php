@@ -127,6 +127,20 @@ class Product extends Model
         return $this->stock_quantity > 0;
     }
 
+    /**
+     * Cover image URL: full URLs are used as-is, relative paths are served from public/.
+     */
+    public function getCoverUrlAttribute(): string
+    {
+        $cover = $this->cover_image;
+
+        if (!$cover) {
+            return asset('assets/img/product/product-img-5-1.jpg');
+        }
+
+        return preg_match('#^https?://#', $cover) ? $cover : asset($cover);
+    }
+
     public function getDiscountPercentageAttribute(): ?float
     {
         if (!$this->compare_at_price || $this->compare_at_price <= $this->price) {

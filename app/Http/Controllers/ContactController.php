@@ -8,7 +8,7 @@ class ContactController extends Controller
 {
     public function show()
     {
-        return view('contact');
+        return view('pages.contact');
     }
 
     public function send(Request $request)
@@ -37,7 +37,7 @@ class ContactController extends Controller
 
     public function careers()
     {
-        return view('careers');
+        return response()->view('pages.error404', [], 404);
     }
 
     public function applyCareer(Request $request)
@@ -56,5 +56,14 @@ class ContactController extends Controller
 
         return redirect()->route('careers')
             ->with('career_success', 'Thank you for applying! Our HR team will get back to you within 3–5 working days.');
+    }
+
+    public function subscribe(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:200',
+        ]);
+
+        return back()->with('success', 'Thanks for subscribing! You will receive our latest updates.');
     }
 }
